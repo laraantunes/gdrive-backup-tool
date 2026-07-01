@@ -19,10 +19,12 @@ try {
 $sourceFolder = $_ENV['BACKUP_SOURCE_FOLDER'] ?? null;
 $tempDir      = $_ENV['BACKUP_TEMP_DIR'] ?? '/tmp';
 $googleFolder = $_ENV['GOOGLE_DRIVE_FOLDER_ID'] ?? null;
-$credentials  = $_ENV['GOOGLE_CREDENTIALS_PATH'] ?? null;
+$clientId     = $_ENV['GOOGLE_CLIENT_ID'] ?? null;
+$clientSecret = $_ENV['GOOGLE_CLIENT_SECRET'] ?? null;
+$refreshToken = $_ENV['GOOGLE_REFRESH_TOKEN'] ?? null;
 
-if (!$sourceFolder || !$googleFolder || !$credentials) {
-    die("Erro: BACKUP_SOURCE_FOLDER, GOOGLE_DRIVE_FOLDER_ID ou GOOGLE_CREDENTIALS_PATH não definidos no .env.\n");
+if (!$sourceFolder || !$googleFolder || !$clientId || !$clientSecret || !$refreshToken) {
+    die("Erro: BACKUP_SOURCE_FOLDER, GOOGLE_DRIVE_FOLDER_ID, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET ou GOOGLE_REFRESH_TOKEN não definidos no .env.\n");
 }
 
 // Verifica se o caminho de origem existe
@@ -73,17 +75,16 @@ echo "Tamanho do arquivo gerado: " . number_format(filesize($zipFilePath) / 1048
 
 // 3. Autenticar no Google Drive
 echo "Autenticando no Google Drive...\n";
-if (!file_exists($credentials)) {
-    unlink($zipFilePath); // Remove zip antes de abortar
-    die("Erro: Arquivo de credenciais JSON '$credentials' não encontrado.\n");
-}
 
 $client = new Client();
+$client->setClientId($clientId);
+$client->setClientSecret($clientSecret);
+
 try {
-    $client->setAuthConfig($credentials);
+    $client->refreshToken($refreshToken);
 } catch (Exception $e) {
     unlink($zipFilePath);
-    die("Erro ao ler credenciais: " . $e->getMessage() . "\n");
+    die("Erro ao renovar token de acesso: " . $e->getMessage() . "\n");
 }
 $client->addScope(Drive::DRIVE_FILE);
 
@@ -102,7 +103,8 @@ $client->setDefer(true);
 
 try {
     $request = $service->files->create($fileMetadata, [
-        'mimeType' => 'application/zip'
+        'mimeType' => 'application/zip',
+        'supportsAllDrives' => true
     ]);
     
     // Tamanho do chunk (ex: 5MB)
