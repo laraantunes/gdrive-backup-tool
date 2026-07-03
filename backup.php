@@ -32,7 +32,11 @@ if (!is_dir($sourceFolder)) {
     die("Erro: O diretório fonte '$sourceFolder' não existe.\n");
 }
 
-$zipFileName = 'backup_' . date('Y-m-d_H-i-s') . '.zip';
+
+$folderName = end(explode('-', $sourceFolder)); 
+
+
+$zipFileName = 'backup_' . $folderName . '_' . date('Y-m-d_H-i-s') . '.zip';
 $zipFilePath = rtrim($tempDir, '/') . '/' . $zipFileName;
 
 echo "Iniciando backup da pasta: $sourceFolder\n";
