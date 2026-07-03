@@ -32,7 +32,7 @@ if (!is_dir($sourceFolder)) {
     die("Erro: O diretório fonte '$sourceFolder' não existe.\n");
 }
 
-$folderName = end(explode('-', $sourceFolder)); 
+$folderName = end(explode('/', $sourceFolder));
 
 $zipFileName = 'backup_' . $folderName . '_' . date('Y-m-d_H-i-s') . '.zip';
 $zipFilePath = rtrim($tempDir, '/') . '/' . $zipFileName;
